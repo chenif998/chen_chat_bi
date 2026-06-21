@@ -37,10 +37,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Exclude all /_next/* (including webpack-hmr) — intercepting those
-     * causes infinite reloads in dev when SITE_PASSWORD is enabled.
-     */
-    '/((?!_next/|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
   ],
 };
