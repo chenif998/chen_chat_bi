@@ -8,14 +8,38 @@ interface ChartBuildContext {
   valueLabels?: string[];
 }
 
+interface DimensionDetection {
+  xKey: string;
+  yKey: string;
+  useQuestionLabels: boolean;
+}
+
 const TRAILING_METRIC_PATTERN =
   /(利润(?:率)?|销售额|销售金额|销售|营收|收入|成本|毛利|数量|金额|合计|总计|统计|查询|分析|多少|是什么|怎么样|比较|对比|分别|各个|各|的)$/;
 
+const METRIC_COLUMN_PATTERN =
+  /(amount|sales|profit|cost|qty|quantity|total|count|num|rate|margin|revenue|income|sum|avg)/i;
+
+const METRIC_HINTS: Array<{ pattern: RegExp; columns: string[] }> = [
+  { pattern: /利润|profit/i, columns: ['profit', 'total_profit', 'sum_profit'] },
+  { pattern: /销售|营收|金额|sales|amount|gmv/i, columns: ['sales_amount', 'total_sales', 'sales', 'amount'] },
+  { pattern: /成本|cost/i, columns: ['cost_amount', 'total_cost', 'cost'] },
+  { pattern: /数量|quantity|qty/i, columns: ['quantity', 'qty', 'count'] },
+];
+
 function extractCategoryLabelFromQuestion(question: string) {
-  let label = question.trim().replace(/[？?！!。，,、；;：:\s]+$/g, '');
+  let label = question.trim();
+  label = label
+    .replace(/，仅看[^，]*/g, '')
+    .replace(/，年份为[^，]*/g, '')
+    .replace(/，产品包含[^，]*/g, '')
+    .replace(/，组织为[^，]*/g, '')
+    .replace(/[？?！!。，,、；;：:\s]+$/g, '');
+
   while (TRAILING_METRIC_PATTERN.test(label)) {
     label = label.replace(TRAILING_METRIC_PATTERN, '').trim();
   }
+
   return label;
 }
 
@@ -51,23 +75,71 @@ function isNumericLike(value: unknown) {
   return false;
 }
 
-function detectDimensions(rows: Row[]) {
-  if (!rows.length) return { xKey: '', yKey: '' };
+function isMetricColumn(name: string) {
+  return METRIC_COLUMN_PATTERN.test(name);
+}
+
+function isYearLikeValue(value: unknown) {
+  if (!isNumericLike(value)) return false;
+  const n = toNumber(value);
+  return Number.isInteger(n) && n >= 1900 && n <= 2100;
+}
+
+function isTrueDimensionColumn(rows: Row[], key: string) {
+  if (isMetricColumn(key)) return false;
+
+  const values = rows.map((row) => row[key]);
+  if (values.every((value) => isNumericLike(value) && !isYearLikeValue(value))) {
+    return false;
+  }
+
+  return true;
+}
+
+function pickMetricKey(rows: Row[], question?: string) {
+  const keys = Object.keys(rows[0]).filter((key) => isNumericLike(rows[0][key]));
+  if (!keys.length) return '';
+
+  const normalizedQuestion = question || '';
+  for (const hint of METRIC_HINTS) {
+    if (!hint.pattern.test(normalizedQuestion)) continue;
+    const matched = keys.find((key) =>
+      hint.columns.some(
+        (candidate) => key.toLowerCase() === candidate || key.toLowerCase().includes(candidate),
+      ),
+    );
+    if (matched) return matched;
+  }
+
+  return keys.find((key) => isMetricColumn(key)) || keys[0];
+}
+
+function detectDimensions(rows: Row[], question?: string): DimensionDetection {
+  if (!rows.length) {
+    return { xKey: '', yKey: '', useQuestionLabels: false };
+  }
+
   const keys = Object.keys(rows[0]);
-  const numericKeys = keys.filter((k) => isNumericLike(rows[0][k]));
-  const nonNumericKeys = keys.filter((k) => !isNumericLike(rows[0][k]));
-  let xKey = nonNumericKeys[0] || '';
-  let yKey = numericKeys[0] || '';
+  const dimensionKeys = keys.filter((key) => isTrueDimensionColumn(rows, key));
+  const numericKeys = keys.filter((key) => isNumericLike(rows[0][key]));
 
-  // If no explicit dimension exists, use the first column as x-axis fallback.
-  if (!xKey) {
-    xKey = keys.find((k) => k !== yKey) || keys[0] || '';
-  }
-  if (!yKey) {
-    yKey = keys.find((k) => k !== xKey) || keys[0] || '';
+  if (dimensionKeys.length > 0) {
+    const xKey = dimensionKeys[0];
+    const yKey = numericKeys.find((key) => key !== xKey) || pickMetricKey(rows, question) || numericKeys[0] || '';
+    const xValuesAreNumeric = rows.every((row) => isNumericLike(row[xKey]) && !isYearLikeValue(row[xKey]));
+    return {
+      xKey,
+      yKey,
+      useQuestionLabels: xValuesAreNumeric,
+    };
   }
 
-  return { xKey, yKey };
+  const yKey = pickMetricKey(rows, question) || numericKeys[0] || keys[0];
+  return {
+    xKey: yKey,
+    yKey,
+    useQuestionLabels: true,
+  };
 }
 
 export function buildChartOption(
@@ -84,15 +156,12 @@ export function buildChartOption(
     return null;
   }
 
-  const { xKey, yKey } = detectDimensions(rows);
+  const { xKey, yKey, useQuestionLabels } = detectDimensions(rows, context?.question);
   if (!xKey || !yKey) return null;
 
-  const useQuestionLabels = xKey === yKey;
   const categoryLabels = useQuestionLabels ? resolveCategoryLabels(rows, context) : [];
-  const xData = useQuestionLabels
-    ? categoryLabels
-    : rows.map((r) => toLabel(r[xKey]));
-  const yData = rows.map((r) => toNumber(r[yKey]));
+  const xData = useQuestionLabels ? categoryLabels : rows.map((row) => toLabel(row[xKey]));
+  const yData = rows.map((row) => toNumber(row[yKey]));
 
   const effectiveType: ChartType = chartType === 'table' ? 'bar' : chartType;
 
@@ -104,9 +173,9 @@ export function buildChartOption(
         {
           type: 'pie',
           radius: '65%',
-          data: rows.map((r, idx) => ({
-            name: useQuestionLabels ? categoryLabels[idx] || toLabel(r[xKey]) : toLabel(r[xKey]),
-            value: toNumber(r[yKey]),
+          data: rows.map((row, idx) => ({
+            name: useQuestionLabels ? categoryLabels[idx] || toLabel(row[xKey]) : toLabel(row[xKey]),
+            value: toNumber(row[yKey]),
           })),
         },
       ],
