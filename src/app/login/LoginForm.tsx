@@ -19,6 +19,7 @@ export function LoginForm() {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify({ password }),
       });
       const data = (await res.json()) as { error?: string };
@@ -28,7 +29,6 @@ export function LoginForm() {
 
       const from = searchParams.get('from') || '/';
       router.replace(from);
-      router.refresh();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '登录失败';
       setError(message);
