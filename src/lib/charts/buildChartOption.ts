@@ -3,6 +3,34 @@ import type { ChartType } from '@/lib/ai/types';
 
 type Row = Record<string, unknown>;
 
+interface ChartBuildContext {
+  question?: string;
+  valueLabels?: string[];
+}
+
+const TRAILING_METRIC_PATTERN =
+  /(利润(?:率)?|销售额|销售金额|销售|营收|收入|成本|毛利|数量|金额|合计|总计|统计|查询|分析|多少|是什么|怎么样|比较|对比|分别|各个|各|的)$/;
+
+function extractCategoryLabelFromQuestion(question: string) {
+  let label = question.trim().replace(/[？?！!。，,、；;：:\s]+$/g, '');
+  while (TRAILING_METRIC_PATTERN.test(label)) {
+    label = label.replace(TRAILING_METRIC_PATTERN, '').trim();
+  }
+  return label;
+}
+
+function resolveCategoryLabels(rows: Row[], context?: ChartBuildContext) {
+  const fromQuestion = context?.question ? extractCategoryLabelFromQuestion(context.question) : '';
+  const fromValues = context?.valueLabels?.filter(Boolean).join('') || '';
+  const baseLabel = fromQuestion || fromValues || '查询结果';
+
+  if (rows.length <= 1) {
+    return [baseLabel];
+  }
+
+  return rows.map((_, idx) => (idx === 0 ? baseLabel : `${baseLabel} ${idx + 1}`));
+}
+
 function toLabel(value: unknown) {
   if (value === null || value === undefined) return '-';
   return String(value);
@@ -42,7 +70,11 @@ function detectDimensions(rows: Row[]) {
   return { xKey, yKey };
 }
 
-export function buildChartOption(rows: Row[], chartType: ChartType): EChartsOption | null {
+export function buildChartOption(
+  rows: Row[],
+  chartType: ChartType,
+  context?: ChartBuildContext,
+): EChartsOption | null {
   if (!rows.length) {
     return null;
   }
@@ -55,7 +87,11 @@ export function buildChartOption(rows: Row[], chartType: ChartType): EChartsOpti
   const { xKey, yKey } = detectDimensions(rows);
   if (!xKey || !yKey) return null;
 
-  const xData = xKey === yKey ? rows.map((_, idx) => `Item ${idx + 1}`) : rows.map((r) => toLabel(r[xKey]));
+  const useQuestionLabels = xKey === yKey;
+  const categoryLabels = useQuestionLabels ? resolveCategoryLabels(rows, context) : [];
+  const xData = useQuestionLabels
+    ? categoryLabels
+    : rows.map((r) => toLabel(r[xKey]));
   const yData = rows.map((r) => toNumber(r[yKey]));
 
   const effectiveType: ChartType = chartType === 'table' ? 'bar' : chartType;
@@ -68,8 +104,8 @@ export function buildChartOption(rows: Row[], chartType: ChartType): EChartsOpti
         {
           type: 'pie',
           radius: '65%',
-          data: rows.map((r) => ({
-            name: toLabel(r[xKey]),
+          data: rows.map((r, idx) => ({
+            name: useQuestionLabels ? categoryLabels[idx] || toLabel(r[xKey]) : toLabel(r[xKey]),
             value: toNumber(r[yKey]),
           })),
         },

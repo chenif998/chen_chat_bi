@@ -183,7 +183,10 @@ export async function POST(request: Request) {
     }
 
     const rows = await getDbClient().unsafe<Record<string, unknown>[]>(queryPlan.sql);
-    const chartOption = buildChartOption(rows, queryPlan.chartType);
+    const chartOption = buildChartOption(rows, queryPlan.chartType, {
+      question: normalizedQuestion,
+      valueLabels: valueFilters.map((filter) => filter.value),
+    });
     const insights = await generateInsights(normalizedQuestion, rows);
     const financeSummary = shouldBuildFinanceSummary(normalizedQuestion)
       ? await buildFinanceSummary(queryPlan.sql)
