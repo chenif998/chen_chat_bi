@@ -20,7 +20,10 @@ DATABASE_URL=
 DEEPSEEK_API_KEY=
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 AI_MODEL=deepseek-chat
+SITE_PASSWORD=your-access-password
 ```
+
+`SITE_PASSWORD` enables site-wide access protection (login page + API guard). Leave it empty locally to skip auth during development.
 
 ## Semantic Layer (Folder-based Model/Dimension Search)
 
@@ -55,4 +58,5 @@ NL2SQL will prioritize resolved shorthand references when generating SQL.
 ## Deployment (Netlify)
 
 Deploy with Netlify and set the same environment variables in the Netlify dashboard.
+Set `SITE_PASSWORD` in production so only people with the password can access the site and APIs.
 `netlify.toml` is included with `@netlify/plugin-nextjs`.

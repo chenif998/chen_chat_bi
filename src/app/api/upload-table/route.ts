@@ -195,12 +195,19 @@ function parseExcel(buffer: Buffer) {
   return XLSX.utils.sheet_to_json<Row>(workbook.Sheets[firstSheet], { defval: null });
 }
 
+type SqlParam = string | number | boolean | null | Date;
+
 function buildInsertStatement(table: string, columns: string[], rows: Row[]) {
-  const params: unknown[] = [];
+  const params: SqlParam[] = [];
   let paramIndex = 1;
   const valueGroups = rows.map((row) => {
     const placeholders = columns.map((col) => {
-      params.push(row[col] ?? null);
+      const value = row[col] ?? null;
+      params.push(
+        value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' || value instanceof Date
+          ? value
+          : String(value),
+      );
       const placeholder = `$${paramIndex}`;
       paramIndex += 1;
       return placeholder;

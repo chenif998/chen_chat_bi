@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, MouseEvent, useEffect, useRef, useState } from 'react';
+import { FormEvent, type MouseEvent as ReactMouseEvent, useEffect, useRef, useState } from 'react';
 import type { EChartsOption } from 'echarts';
 import { DynamicChart } from '@/components/charts/DynamicChart';
 
@@ -135,7 +135,7 @@ export default function Home() {
   useEffect(() => {
     if (!dragState && !resizeState) return;
 
-    function onMouseMove(event: MouseEvent) {
+    function onMouseMove(event: globalThis.MouseEvent) {
       if (dragState) {
         const dx = event.clientX - dragState.startX;
         const dy = event.clientY - dragState.startY;
@@ -242,7 +242,7 @@ export default function Home() {
     return parts.filter(Boolean).join('，');
   }
 
-  function startDrag(event: MouseEvent, id: string) {
+  function startDrag(event: ReactMouseEvent, id: string) {
     event.preventDefault();
     const card = getCardById(id);
     if (!card) return;
@@ -256,7 +256,7 @@ export default function Home() {
     });
   }
 
-  function startResize(event: MouseEvent, id: string) {
+  function startResize(event: ReactMouseEvent, id: string) {
     event.preventDefault();
     event.stopPropagation();
     const card = getCardById(id);

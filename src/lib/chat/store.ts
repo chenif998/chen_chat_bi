@@ -1,4 +1,7 @@
+import postgres from 'postgres';
 import { getDbClient } from '@/lib/db';
+
+type JSONValue = postgres.JSONValue;
 
 export interface ChatSessionItem {
   id: string;
@@ -86,7 +89,7 @@ export async function saveMessage(
   const sql = getDbClient();
   await sql`
     INSERT INTO chat_messages (session_id, role, content, payload)
-    VALUES (${sessionId}, ${role}, ${content}, ${payload ? sql.json(payload) : null})
+    VALUES (${sessionId}, ${role}, ${content}, ${payload ? sql.json(payload as JSONValue) : null})
   `;
 }
 
