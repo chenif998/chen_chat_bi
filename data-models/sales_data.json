@@ -1,0 +1,36 @@
+{
+  "modelName": "sales_data_model",
+  "table": "sales_data",
+  "modelAlias": "sd",
+  "description": "销售事实表，适用于区域、品类、时间等分析",
+  "dimensions": [
+    {
+      "name": "region",
+      "column": "region",
+      "fieldType": "dimension",
+      "aliases": ["reg", "area", "qy", "dq"],
+      "description": "销售区域"
+    },
+    {
+      "name": "category",
+      "column": "category",
+      "fieldType": "dimension",
+      "aliases": ["cat", "lb", "splb"],
+      "description": "商品品类"
+    },
+    {
+      "name": "order_date",
+      "column": "order_date",
+      "fieldType": "dimension",
+      "aliases": ["dt", "date", "rq", "sj"],
+      "description": "订单日期"
+    },
+    {
+      "name": "sales_amount",
+      "column": "sales_amount",
+      "fieldType": "measure",
+      "aliases": ["amt", "gmv", "sales", "je", "xse"],
+      "description": "销售额指标"
+    }
+  ]
+}

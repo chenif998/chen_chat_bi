@@ -1,0 +1,242 @@
+{
+  "modelName": "dw_sa_fact_saledetail_260422_model",
+  "table": "dw_sa_fact_saledetail_260422",
+  "modelAlias": "dw",
+  "description": "dw_sa_fact_saledetail_260422 uploaded table",
+  "derivedMetrics": [
+    {
+      "name": "cost_amount",
+      "expression": "(sales_amount - profit)",
+      "fieldType": "measure",
+      "aliases": [
+        "cost",
+        "cb",
+        "cbje"
+      ],
+      "description": "成本金额 = 销售金额 - 利润"
+    },
+    {
+      "name": "profit_rate",
+      "expression": "CASE WHEN sales_amount = 0 THEN NULL ELSE profit / sales_amount END",
+      "fieldType": "measure",
+      "aliases": [
+        "margin",
+        "mrate",
+        "lrl"
+      ],
+      "description": "利润率 = 利润 / 销售金额"
+    }
+  ],
+  "dimensions": [
+    {
+      "name": "order_date",
+      "column": "order_date",
+      "fieldType": "dimension",
+      "aliases": [
+        "od",
+        "ord"
+      ],
+      "description": "order_date"
+    },
+    {
+      "name": "order_year",
+      "column": "order_year",
+      "fieldType": "dimension",
+      "aliases": [
+        "oy",
+        "ord"
+      ],
+      "description": "order_year"
+    },
+    {
+      "name": "order_year_month",
+      "column": "order_year_month",
+      "fieldType": "dimension",
+      "aliases": [
+        "oym",
+        "ord"
+      ],
+      "description": "order_year_month"
+    },
+    {
+      "name": "ship_mode",
+      "column": "ship_mode",
+      "fieldType": "dimension",
+      "aliases": [
+        "sm",
+        "shi"
+      ],
+      "description": "ship_mode"
+    },
+    {
+      "name": "product_code",
+      "column": "product_code",
+      "fieldType": "dimension",
+      "aliases": [
+        "pc",
+        "pro"
+      ],
+      "description": "product_code"
+    },
+    {
+      "name": "product_name",
+      "column": "product_name",
+      "fieldType": "dimension",
+      "aliases": [
+        "pn",
+        "pro"
+      ],
+      "description": "product_name"
+    },
+    {
+      "name": "product_type",
+      "column": "product_type",
+      "fieldType": "dimension",
+      "aliases": [
+        "pt",
+        "pro"
+      ],
+      "description": "product_type"
+    },
+    {
+      "name": "product_category",
+      "column": "product_category",
+      "fieldType": "dimension",
+      "aliases": [
+        "pc",
+        "pro"
+      ],
+      "description": "product_category"
+    },
+    {
+      "name": "customer_code",
+      "column": "customer_code",
+      "fieldType": "dimension",
+      "aliases": [
+        "cc",
+        "cus"
+      ],
+      "description": "customer_code"
+    },
+    {
+      "name": "customer_name",
+      "column": "customer_name",
+      "fieldType": "dimension",
+      "aliases": [
+        "cn",
+        "cus"
+      ],
+      "description": "customer_name"
+    },
+    {
+      "name": "customer_type",
+      "column": "customer_type",
+      "fieldType": "dimension",
+      "aliases": [
+        "ct",
+        "cus"
+      ],
+      "description": "customer_type"
+    },
+    {
+      "name": "region",
+      "column": "region",
+      "fieldType": "dimension",
+      "aliases": [
+        "r",
+        "reg"
+      ],
+      "description": "region"
+    },
+    {
+      "name": "province",
+      "column": "province",
+      "fieldType": "dimension",
+      "aliases": [
+        "p",
+        "pro"
+      ],
+      "description": "province"
+    },
+    {
+      "name": "city_short",
+      "column": "city_short",
+      "fieldType": "dimension",
+      "aliases": [
+        "cs",
+        "cit"
+      ],
+      "description": "city_short"
+    },
+    {
+      "name": "sales_amount",
+      "column": "sales_amount",
+      "fieldType": "measure",
+      "aliases": [
+        "sa",
+        "sal"
+      ],
+      "description": "sales_amount"
+    },
+    {
+      "name": "profit",
+      "column": "profit",
+      "fieldType": "measure",
+      "aliases": [
+        "p",
+        "pro"
+      ],
+      "description": "profit"
+    },
+    {
+      "name": "quantity",
+      "column": "quantity",
+      "fieldType": "measure",
+      "aliases": [
+        "q",
+        "qua"
+      ],
+      "description": "quantity"
+    },
+    {
+      "name": "review_date",
+      "column": "review_date",
+      "fieldType": "dimension",
+      "aliases": [
+        "rd",
+        "rev"
+      ],
+      "description": "review_date"
+    },
+    {
+      "name": "org_id",
+      "column": "org_id",
+      "fieldType": "dimension",
+      "aliases": [
+        "oi",
+        "org"
+      ],
+      "description": "org_id"
+    },
+    {
+      "name": "org_code",
+      "column": "org_code",
+      "fieldType": "dimension",
+      "aliases": [
+        "oc",
+        "org"
+      ],
+      "description": "org_code"
+    },
+    {
+      "name": "org_name",
+      "column": "org_name",
+      "fieldType": "dimension",
+      "aliases": [
+        "on",
+        "org"
+      ],
+      "description": "org_name"
+    }
+  ]
+}

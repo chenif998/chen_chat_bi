@@ -1,0 +1,14 @@
+[
+  {
+    "alias": "jd",
+    "table": "dw_sa_fact_saledetail_260422",
+    "column": "ship_mode",
+    "value": "京东"
+  },
+  {
+    "alias": "北分",
+    "table": "dw_sa_fact_saledetail_260422",
+    "column": "province",
+    "value": "北京"
+  }
+]
